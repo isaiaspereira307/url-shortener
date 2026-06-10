@@ -1,0 +1,896 @@
+basePath: /
+definitions:
+  presentation.HealthResponse:
+    properties:
+      database:
+        type: string
+      redis:
+        type: string
+      service:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  presentation.LinkListResponse:
+    properties:
+      limit:
+        type: integer
+      links:
+        items:
+          $ref: '#/definitions/presentation.LinkResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  presentation.LinkResponse:
+    properties:
+      clicks:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: string
+      original_url:
+        type: string
+      short_code:
+        type: string
+      short_url:
+        type: string
+    type: object
+  presentation.LinkStatsResponse:
+    properties:
+      browsers:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      clicks_by_country:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      clicks_by_day:
+        items: {}
+        type: array
+      original_url:
+        type: string
+      platforms:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      recent_clicks:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      short_code:
+        type: string
+      total_clicks:
+        type: integer
+      unique_visitors:
+        type: integer
+    type: object
+  presentation.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  presentation.MyIPResponse:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      ip:
+        type: string
+      isp:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  presentation.PixelCreateRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  presentation.PixelListResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      pixels:
+        items:
+          $ref: '#/definitions/presentation.PixelResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  presentation.PixelResponse:
+    properties:
+      clicks:
+        type: integer
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      pixel_url:
+        type: string
+    type: object
+  presentation.RedirectStep:
+    properties:
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
+  presentation.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  presentation.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      tenant_name:
+        type: string
+    required:
+    - email
+    - password
+    - tenant_name
+    type: object
+  presentation.ShortenRequest:
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  presentation.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      totp_required:
+        type: boolean
+    type: object
+  presentation.TotpSetupResponse:
+    properties:
+      backup_codes:
+        items:
+          type: string
+        type: array
+      qr_code_uri:
+        type: string
+      secret:
+        type: string
+    type: object
+  presentation.TotpVerifyRequest:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  presentation.URLCheckRequest:
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  presentation.URLCheckResponse:
+    properties:
+      final_url:
+        type: string
+      is_safe:
+        type: boolean
+      original_url:
+        type: string
+      redirect_chain:
+        items:
+          $ref: '#/definitions/presentation.RedirectStep'
+        type: array
+      server_headers:
+        additionalProperties:
+          type: string
+        type: object
+      server_ip:
+        type: string
+      total_redirects:
+        type: integer
+      warnings:
+        items:
+          type: string
+        type: array
+    type: object
+  presentation.UTMBuildRequest:
+    properties:
+      url:
+        type: string
+      utm_campaign:
+        type: string
+      utm_content:
+        type: string
+      utm_medium:
+        type: string
+      utm_source:
+        type: string
+      utm_term:
+        type: string
+    required:
+    - url
+    type: object
+  presentation.UTMResponse:
+    properties:
+      original_url:
+        type: string
+      params:
+        additionalProperties:
+          type: string
+        type: object
+      utm_url:
+        type: string
+    type: object
+host: localhost:8002
+info:
+  contact: {}
+  description: Go/Gin backend for the URL Shortener portfolio project
+  title: URL Shortener - Go Backend
+  version: "1.0"
+paths:
+  /{short_code}:
+    get:
+      parameters:
+      - description: Short code
+        in: path
+        name: short_code
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Redirect
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redirect to original URL
+      tags:
+      - links
+  /api/auth/2fa/disable:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 2FA verification code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.TotpVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Disable 2FA
+      tags:
+      - auth
+  /api/auth/2fa/setup:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.TotpSetupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Setup 2FA for user
+      tags:
+      - auth
+  /api/auth/2fa/verify:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 2FA verification code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.TotpVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Verify and enable 2FA
+      tags:
+      - auth
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - auth
+  /api/auth/login/2fa:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 2FA code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.TotpVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Login with 2FA
+      tags:
+      - auth
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presentation.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register new user
+      tags:
+      - auth
+  /api/links:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: created_at
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: Sort order
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.LinkListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List user's links
+      tags:
+      - links
+  /api/links/{short_code}:
+    delete:
+      parameters:
+      - description: Short code
+        in: path
+        name: short_code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a link
+      tags:
+      - links
+  /api/links/{short_code}/stats:
+    get:
+      parameters:
+      - description: Short code
+        in: path
+        name: short_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.LinkStatsResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get link statistics
+      tags:
+      - links
+  /api/pixel:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Pixel data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.PixelCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presentation.PixelResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create tracking pixel
+      tags:
+      - tools
+  /api/pixel/{code}:
+    delete:
+      parameters:
+      - description: Pixel code
+        in: path
+        name: code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a pixel
+      tags:
+      - tools
+  /api/pixels:
+    get:
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.PixelListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List user's pixels
+      tags:
+      - tools
+  /api/shorten:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: URL to shorten
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.ShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/presentation.LinkResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create short link
+      tags:
+      - links
+  /check-url:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: URL to check
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.URLCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.URLCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check URL safety
+      tags:
+      - tools
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /myip:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.MyIPResponse'
+      summary: Get client IP info
+      tags:
+      - tools
+  /pixel/{code}.png:
+    get:
+      parameters:
+      - description: Pixel code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Serve tracking pixel
+      tags:
+      - tools
+  /utm-builder:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: UTM parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/presentation.UTMBuildRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/presentation.UTMResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Build UTM URL
+      tags:
+      - tools
+securityDefinitions:
+  Bearer:
+    description: 'Type "Bearer" followed by a space and JWT token. Example: "Bearer
+      eyJhbGciOiJIUzI1NiIs..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -1,0 +1,41 @@
+[project]
+name = "url-shortener-python"
+version = "0.1.0"
+description = "URL Shortener - Python/FastAPI Backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "redis[hiredis]>=5.2.0",
+    "pyjwt>=2.9.0",
+    "argon2-cffi>=23.1.0",
+    "pyotp>=2.9.0",
+    "pydantic[email]>=2.10.0",
+    "python-multipart>=0.0.17",
+    "httpx>=0.28.0",
+    "nanoid>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "testcontainers[postgres,redis]>=4.8.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 50

@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+!.env.example
+
+# Podman/Docker
+*.tar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Test
+.pytest_cache/
+
+# Rust
+backends/rust-axum/target/

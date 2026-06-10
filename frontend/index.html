@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener - Portfolio Project</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/">URL Shortener</a>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <span class="backend-badge">Backend: <span id="current-backend">Python (FastAPI)</span></span>
+            <select id="backend-selector" onchange="switchBackend(this.value)">
+                <option value="python" selected>Python (FastAPI)</option>
+                <option value="rust">Rust (Axum)</option>
+                <option value="go">Go (Gin)</option>
+            </select>
+            <div id="auth-section">
+                <button id="login-btn" onclick="showPage('login')">Login</button>
+                <button id="register-btn" onclick="showPage('register')">Register</button>
+            </div>
+            <div id="user-section" style="display:none;">
+                <span id="user-email"></span>
+                <button id="btn-dashboard" onclick="showPage('dashboard')">Dashboard</button>
+                <button id="btn-tools" onclick="showPage('tools')">Tools</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div id="health-status" class="health-bar">
+            <h3>Backend Health</h3>
+            <div class="health-items">
+                <div class="health-item" id="health-python">
+                    <span class="indicator"></span>
+                    <span>Python (FastAPI)</span>
+                    <a href="/api/python/docs" target="_blank" class="swagger-link">Swagger</a>
+                </div>
+                <div class="health-item" id="health-rust">
+                    <span class="indicator"></span>
+                    <span>Rust (Axum)</span>
+                    <a href="/api/rust/docs/" target="_blank" class="swagger-link">Swagger</a>
+                </div>
+                <div class="health-item" id="health-go">
+                    <span class="indicator"></span>
+                    <span>Go (Gin)</span>
+                    <a href="/api/go/docs/" target="_blank" class="swagger-link">Swagger</a>
+                </div>
+            </div>
+        </div>
+
+        <section id="page-login" class="page">
+            <div class="auth-card">
+                <h2>Login</h2>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required placeholder="you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="Your password">
+                    </div>
+                    <div id="login-2fa" style="display:none;">
+                        <div class="form-group">
+                            <label for="login-totp">2FA Code</label>
+                            <input type="text" id="login-totp" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                        </div>
+                    </div>
+                    <div id="login-error" class="error"></div>
+                    <button type="submit">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" onclick="showPage('register')">Register</a></p>
+            </div>
+        </section>
+
+        <section id="page-register" class="page" style="display:none;">
+            <div class="auth-card">
+                <h2>Create Account</h2>
+                <form id="register-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="register-name">Organization Name</label>
+                        <input type="text" id="register-name" required placeholder="My Company">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required placeholder="you@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required minlength="8" placeholder="Min 8 characters">
+                    </div>
+                    <div id="register-error" class="error"></div>
+                    <button type="submit">Create Account</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" onclick="showPage('login')">Login</a></p>
+            </div>
+        </section>
+
+        <section id="page-dashboard" class="page" style="display:none;">
+            <div class="dashboard">
+                <div class="shorten-section">
+                    <h2>Shorten a URL</h2>
+                    <form id="shorten-form" onsubmit="handleShorten(event)">
+                        <div class="form-group">
+                            <input type="url" id="url-input" required placeholder="https://example.com/very/long/url">
+                            <button type="submit">Shorten</button>
+                        </div>
+                    </form>
+                    <div id="shorten-result" class="result" style="display:none;">
+                        <p>Your shortened URL:</p>
+                        <div class="short-url">
+                            <a id="short-url-link" href="#" target="_blank"></a>
+                            <button onclick="copyToClipboard('short-url-link')">Copy</button>
+                        </div>
+                        <div id="shorten-error" class="error"></div>
+                    </div>
+                </div>
+
+                <div class="links-section">
+                    <h2>Your Links</h2>
+                    <div id="links-list"></div>
+                    <div id="links-empty" style="display:none;">
+                        <p>No links created yet. Shorten your first URL above!</p>
+                    </div>
+                </div>
+
+                <div id="link-stats-section" class="stats-section" style="display:none;">
+                    <h2>Link Analytics</h2>
+                    <button class="close-btn" onclick="closeStats()">&times;</button>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-clicks">0</div>
+                            <div class="stat-label">Total Clicks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-unique-visitors">0</div>
+                            <div class="stat-label">Unique Visitors</div>
+                        </div>
+                    </div>
+                    <div class="stats-details">
+                        <h3>Clicks by Country</h3>
+                        <div id="stats-countries" class="bar-chart"></div>
+                        <h3>Browsers</h3>
+                        <div id="stats-browsers" class="bar-chart"></div>
+                        <h3>Platforms</h3>
+                        <div id="stats-platforms" class="bar-chart"></div>
+                        <h3>Recent Clicks</h3>
+                        <div id="stats-recent" class="recent-clicks"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-tools" class="page" style="display:none;">
+            <div class="dashboard">
+                <div class="tools-tabs">
+                    <button class="tab-btn active" onclick="switchToolTab('myip')">My IP</button>
+                    <button class="tab-btn" onclick="switchToolTab('checkurl')">URL Checker</button>
+                    <button class="tab-btn" onclick="switchToolTab('utm')">UTM Builder</button>
+                    <button class="tab-btn" onclick="switchToolTab('pixels')">Tracking Pixels</button>
+                </div>
+
+                <div id="tool-myip" class="tool-panel">
+                    <div class="tool-card">
+                        <h2>Your IP Address</h2>
+                        <div class="ip-display" id="ip-info">Loading...</div>
+                        <button onclick="loadMyIP()">Refresh</button>
+                    </div>
+                </div>
+
+                <div id="tool-checkurl" class="tool-panel" style="display:none;">
+                    <div class="tool-card">
+                        <h2>URL Checker</h2>
+                        <p class="tool-desc">Check where a URL redirects and detect hidden redirects, security warnings, and server information.</p>
+                        <form onsubmit="handleCheckURL(event)">
+                            <div class="form-group">
+                                <input type="url" id="check-url-input" required placeholder="https://suspicious-link.com/abc">
+                                <button type="submit">Check URL</button>
+                            </div>
+                        </form>
+                        <div id="url-check-result" style="display:none;">
+                            <div id="url-check-status" class="result"></div>
+                            <div id="url-check-chain"></div>
+                            <div id="url-check-warnings"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tool-utm" class="tool-panel" style="display:none;">
+                    <div class="tool-card">
+                        <h2>UTM Builder</h2>
+                        <p class="tool-desc">Add UTM tracking parameters to your URLs for marketing campaigns.</p>
+                        <form onsubmit="handleUTMBuild(event)">
+                            <div class="form-group">
+                                <label>Website URL</label>
+                                <input type="url" id="utm-url" required placeholder="https://example.com/page">
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Source</label>
+                                <input type="text" id="utm-source" placeholder="google">
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Medium</label>
+                                <input type="text" id="utm-medium" placeholder="cpc">
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Name</label>
+                                <input type="text" id="utm-campaign" placeholder="spring_sale">
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Term (optional)</label>
+                                <input type="text" id="utm-term" placeholder="running+shoes">
+                            </div>
+                            <div class="form-group">
+                                <label>Campaign Content (optional)</label>
+                                <input type="text" id="utm-content" placeholder="logolink">
+                            </div>
+                            <button type="submit">Generate UTM URL</button>
+                        </form>
+                        <div id="utm-result" style="display:none;" class="result">
+                            <p>Generated URL:</p>
+                            <div class="short-url">
+                                <a id="utm-url-link" href="#" target="_blank"></a>
+                                <button onclick="copyToClipboard('utm-url-link')">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tool-pixels" class="tool-panel" style="display:none;">
+                    <div class="tool-card">
+                        <h2>Tracking Pixels</h2>
+                        <p class="tool-desc">Create invisible 1x1 pixel images to track visitors on your website or emails.</p>
+                        <form onsubmit="handleCreatePixel(event)" class="inline-form">
+                            <div class="form-group">
+                                <input type="text" id="pixel-name" placeholder="Pixel name (optional)">
+                                <button type="submit">Create Pixel</button>
+                            </div>
+                        </form>
+                        <div id="pixel-create-result" style="display:none;" class="result">
+                            <p>Pixel URL:</p>
+                            <div class="short-url">
+                                <a id="pixel-url-link" href="#" target="_blank"></a>
+                                <button onclick="copyToClipboard('pixel-url-link')">Copy</button>
+                            </div>
+                        </div>
+                        <div id="pixels-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-2fa-setup" class="page" style="display:none;">
+            <div class="auth-card">
+                <h2>Setup Two-Factor Authentication</h2>
+                <p>Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+                <div id="qr-code" class="qr-container"></div>
+                <div class="form-group">
+                    <label for="totp-secret">Secret Key</label>
+                    <input type="text" id="totp-secret" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="totp-verify-code">Enter 6-digit code to verify</label>
+                    <input type="text" id="totp-verify-code" placeholder="000000" maxlength="6">
+                    <button onclick="verifyTOTP()">Verify & Enable</button>
+                </div>
+                <div id="totp-error" class="error"></div>
+                <div id="backup-codes" style="display:none;">
+                    <h3>Backup Codes</h3>
+                    <p>Save these codes in a safe place. Each can be used once.</p>
+                    <div id="backup-codes-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>URL Shortener Portfolio Project &mdash; Multi-backend architecture with Rust, Go, and Python</p>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
